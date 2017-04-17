@@ -5,7 +5,7 @@ from block import bloque
 import re
 from garra import garra
 
-
+PREDICATES = ['ON', 'ONTABLE', 'HOLDING', 'CLEAR', 'ARMEMPTY']
 
 def check_p(to_check, claw, current_state=[]):
     """
@@ -65,12 +65,11 @@ def check_p(to_check, claw, current_state=[]):
 def get_relevant_actions(to_check, current_state, claw):
     """
     este metodo regresa las acciones relevantes para que se cumpla el predicado
-    que se esta evaluando
+    que se esta evaluando asi como sus precondiciones
     """
     tst = to_check[to_check.index('(')+1:to_check.index(')')]
     block_names = re.split(',', tst)
     to_execute = []
-    cont = 1
     b1_name = block_names[0]
     if to_check.startswith('ONTABLE'):
         to_execute.append('PUTDOWN({})'.format(b1_name))
@@ -109,6 +108,10 @@ def get_relevant_actions(to_check, current_state, claw):
     return to_execute
 
 def apply_action(to_apply, current_state, claw):
+    """
+    hace cambios al estado actual en base a la accion
+    recibida como param
+    """
     tst = to_apply[to_apply.index('(')+1:to_apply.index(')')]
     block_names = re.split(',', tst)
     b1_name = block_names[0]
@@ -119,7 +122,7 @@ def apply_action(to_apply, current_state, claw):
             if block_names[1] in torre:
                 torre.append(b1_name)
         claw.put_down(claw.holding)
-    
+
     elif to_apply.startswith('UNSTACK'):
         for torre in current_state:
             if b1_name in torre:
@@ -127,7 +130,7 @@ def apply_action(to_apply, current_state, claw):
         #nt = [b1_name]
         claw.pickup(b1_name)
         #current_state.append(nt)
-    
+
     elif to_apply.startswith('PICKUP'):
         claw.pickup(b1_name)
         for torre in current_state:
@@ -142,7 +145,7 @@ def apply_action(to_apply, current_state, claw):
 
     return current_state
 
-PREDICATES = ['ON', 'ONTABLE', 'HOLDING', 'CLEAR', 'ARMEMPTY']
+
 INPUT = open('initial.txt', 'r')
 STATE1 = []
 for linea in INPUT:
@@ -224,7 +227,7 @@ def solve():
         pred = '@'
         if ind > 0:
             pred = accion_actual[:ind]
-        #print accion_actual
+        print accion_actual
         if pred in PREDICATES:
             #print '........'
             #print current_state
@@ -233,14 +236,14 @@ def solve():
                 cumplido = True
                 for meta in tmp_gls:
                     cumplido = cumplido and check_p(meta, my_claw, current_state)
-                
+
 
             else:
                 cumplido = check_p(accion_actual, my_claw, current_state)
                 if cumplido == False:
                     rest = get_relevant_actions(accion_actual, current_state, my_claw)
                     my_stack.extend(rest)
-                
+
         #entrar a este else implica que es una accion y por lo tanto
         #se debe agregar al plan VERIFICAR ESTA PARTE
         else:
@@ -251,10 +254,3 @@ def solve():
     print '**********************'
     print plan
 solve()
-"""
-ljt = [2,4,6]
-stt = [True,1,3,5]
-print stt.pop(0)
-ljt.extend(stt)
-print ljt
-"""
